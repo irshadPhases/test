@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  vue_app:
+    container_name: vue_app
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    volumes:
+      - .:/usr/src/app
+      - ./public:/usr/src/app/public
+    ports:
+      - '5173:5173'
+    depends_on:
+      - vue_db
+    networks:
+      - app_network
+
+  vue_nginx:
+    container_name: vue_nginx
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    volumes:
+    - ./public:/usr/src/app/public
+    ports:
+      - 8000:80
+    depends_on:
+      - vue_app
+    environment:
+      NGINX_FPM_HOST: vue_app
+      NGINX_ROOT: /usr/src/app/public
+    networks:
+      - app_network
+
+  vue_db:
+    container_name: vue_db
+    image: mysql:8.0.20
+    restart: always
+    volumes:
+      - ./storage/db-data:/var/lib/mysql
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_DATABASE: fus
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: fus
+      MYSQL_PASSWORD: fusApp@@
+    networks:
+      - app_network
+networks:
+  app_network:
+    driver: bridge
